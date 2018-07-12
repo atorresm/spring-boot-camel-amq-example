@@ -15,7 +15,7 @@
           The amq component ensures to use the broker in the kubernetes cluster.
         -->
         <route id="generate-order-route" streamCache="true">
-            <from id="route-timer" uri="timer:order?period=3000"/>
+            <from id="route-timer" uri="timer:order?period=10"/>
             <bean id="route-new-order" method="generateOrder" ref="orderGenerator"/>
             <setHeader headerName="Exchange.FILE_NAME" id="route-set-order-header">
                 <!-- defining the header containing a simulated file name -->
@@ -32,28 +32,5 @@
           the specific rules defined for that country. The <otherwise/> element ensures that any message that does not meet the
           requirements for either of the <when/> elements will follow another route.
         -->
-        <route id="jms-cbr-route" streamCache="true">
-            <from id="route-from-incoming-orders" uri="amqp:queue:incomingOrders"/>
-            <choice id="route-choose-country">
-                <when id="route-when-uk">
-                    <xpath>/order/customer/country = 'UK'</xpath>
-                    <!-- Put additional routing rules for UK messages here -->
-                    <log id="route-log-uk" message="Sending order ${file:name} to the UK"/>
-                    <to id="route-to-uk-orders" uri="amqp:queue:ordersUK"/>
-                </when>
-                <when id="route-when-us">
-                    <xpath>/order/customer/country = 'US'</xpath>
-                    <!-- Put additional routing rules for US messages here -->
-                    <log id="route-log-us" message="Sending order ${file:name} to the US"/>
-                    <to id="route-to-us-orders" uri="amqp:queue:ordersUS"/>
-                </when>
-                <otherwise id="route-when-other-country">
-                    <!-- Put additional routing rules for other messages here -->
-                    <log id="route-log-other" message="Sending order ${file:name} to another country"/>
-                    <to id="route-to-other-orders" uri="amqp:queue:ordersOther"/>
-                </otherwise>
-            </choice>
-            <log id="route-final-log" message="Done processing ${file:name}"/>
-        </route>
     </camelContext>
 </beans>
